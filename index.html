@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Taskora – organizator de activități, termene și evenimente Google Calendar.">
+  <title>Taskora – Organizează-ți ziua</title>
+  <style>
+    :root {
+      font-family: Arial, Helvetica, sans-serif;
+      color: #18263e;
+      background: #f5f7fc;
+      color-scheme: light;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; line-height: 1.45; }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    button:focus-visible, input:focus-visible, select:focus-visible {
+      outline: 3px solid #93b8ff; outline-offset: 2px;
+    }
+    .hero {
+      padding: 42px 20px 88px;
+      color: white;
+      text-align: center;
+      background: linear-gradient(115deg, #174f91 0%, #5d45ac 100%);
+    }
+    .brand { font-size: clamp(30px, 5vw, 44px); font-weight: 800; margin: 0 0 6px; letter-spacing: -.8px; }
+    .subtitle { margin: 0; opacity: .94; }
+    main { max-width: 900px; margin: -58px auto 0; padding: 0 18px 32px; }
+    .card {
+      padding: 24px;
+      background: white;
+      border: 1px solid #e1e6f1;
+      border-radius: 17px;
+      box-shadow: 0 10px 30px rgba(32, 54, 100, .07);
+      margin-bottom: 18px;
+    }
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+    .stat { background: white; padding: 16px; border-radius: 15px; border: 1px solid #e1e6f1; }
+    .stat strong { display: block; font-size: 30px; line-height: 1.2; color: #3a4ab4; }
+    .stat span { font-size: 13px; color: #677289; }
+    h2 { margin: 0 0 5px; font-size: 21px; }
+    .muted { font-size: 14px; color: #69758a; margin: 0 0 20px; }
+    label { font-size: 14px; font-weight: 700; display: block; margin-bottom: 7px; }
+    input, select { width: 100%; padding: 12px; border: 1px solid #cfd7e8; border-radius: 10px; background: white; color: #18263e; }
+    .fields { display: grid; grid-template-columns: 1.7fr 1fr 1fr .85fr; gap: 14px; align-items: end; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+    .btn { border: 1px solid #d6dceb; border-radius: 10px; padding: 11px 17px; background: #fff; color: #33437b; font-weight: 700; }
+    .btn:hover { filter: brightness(.97); }
+    .btn-primary { background: #4257bb; color: white; border-color: #4257bb; }
+    .section-top { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 15px; }
+    .filter-group { display: flex; flex-wrap: wrap; gap: 5px; border-radius: 11px; background: #eef1f9; padding: 4px; }
+    .filter { border: 0; background: transparent; padding: 8px 12px; border-radius: 8px; color: #51607a; font-weight: 700; font-size: 13px; }
+    .filter[aria-pressed="true"] { background: white; color: #344bb0; box-shadow: 0 1px 4px #1629551a; }
+    .task-list { list-style: none; margin: 0; padding: 0; }
+    .task { display: flex; align-items: center; gap: 12px; padding: 14px 0; border-top: 1px solid #edf0f6; }
+    .task:first-child { border-top: 0; }
+    .task input[type="checkbox"] { flex: 0 0 auto; width: 19px; height: 19px; accent-color: #4257bb; cursor: pointer; }
+    .task-details { flex: 1; min-width: 0; }
+    .task-name { font-size: 15px; font-weight: 700; overflow-wrap: anywhere; }
+    .task.done .task-name { text-decoration: line-through; color: #8891a3; }
+    .task-meta { margin-top: 5px; font-size: 12px; color: #728098; display: flex; flex-wrap: wrap; gap: 7px; }
+    .tag { border-radius: 30px; padding: 3px 8px; background: #eff2f8; }
+    .tag.high { color: #a63d36; background: #fff0ee; }
+    .tag.medium { color: #8a5d18; background: #fff5dd; }
+    .tag.low { color: #286c63; background: #e6f6f1; }
+    .tag.late { color: #b13b45; background: #ffedf0; }
+    .delete { border: 0; border-radius: 8px; padding: 9px 10px; background: transparent; color: #7c8699; font-size: 13px; }
+    .calendar-link { display: inline-flex; align-items: center; padding: 8px 10px; border: 1px solid #cfdaee; border-radius: 8px; color: #2d56a5; font-size: 12px; font-weight: 700; text-decoration: none; background: #f5f8ff; white-space: nowrap; }
+    .calendar-link:hover { background: #eaf0ff; }
+    .calendar-link:focus-visible { outline: 3px solid #93b8ff; outline-offset: 2px; }
+    .info { border-radius: 11px; background: #f1f5ff; border: 1px solid #dce6fd; padding: 13px 15px; font-size: 13px; color: #3e557a; line-height: 1.6; margin: 14px 0 0; }
+    .task-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+    .delete:hover { background: #fff0f1; color: #aa3341; }
+    .empty { text-align: center; padding: 26px 8px; color: #6a7790; }
+    .empty strong { display: block; color: #3b4963; margin-bottom: 6px; }
+    .progress-wrap { height: 8px; border-radius: 20px; background: #e8ecf7; overflow: hidden; margin-bottom: 15px; }
+    #progress { width: 0%; height: 100%; background: linear-gradient(90deg, #3e8ab9, #6854bf); transition: width .25s ease; }
+    #message { min-height: 21px; color: #316847; font-size: 14px; margin: 12px 0 0; }
+    footer { text-align: center; max-width: 900px; margin: 0 auto; color: #7a8498; font-size: 12px; padding: 0 18px 30px; }
+    @media (max-width: 690px) {
+      .fields { grid-template-columns: 1fr; }
+      .task { flex-wrap: wrap; }
+      .task-actions { width: 100%; justify-content: flex-end; }
+      .card { padding: 18px; }
+      .stats { gap: 8px; }
+      .stat { padding: 13px 10px; }
+      .stat strong { font-size: 25px; }
+      .hero { padding-top: 35px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <h1 class="brand">✓ Taskora</h1>
+    <p class="subtitle">Organizează-ți activitățile și adaugă termenele în Google Calendar.</p>
+  </header>
+
+  <main>
+    <section class="stats" aria-label="Statistici activități">
+      <div class="stat"><strong id="total">0</strong><span>Total activități</span></div>
+      <div class="stat"><strong id="pending">0</strong><span>De făcut</span></div>
+      <div class="stat"><strong id="completed">0</strong><span>Finalizate</span></div>
+    </section>
+
+    <section class="card" aria-labelledby="add-title">
+      <h2 id="add-title">Adaugă o activitate</h2>
+      <p class="muted">Scrie ce ai de făcut, alege o prioritate și, dacă vrei, data și ora termenului.</p>
+      <form id="task-form">
+        <div class="fields">
+          <div>
+            <label for="task-name">Activitatea</label>
+            <input id="task-name" type="text" placeholder="Ex.: Pregătește prezentarea pentru curs" maxlength="140" required autocomplete="off">
+          </div>
+          <div>
+            <label for="priority">Prioritate</label>
+            <select id="priority">
+              <option value="medie">Medie</option>
+              <option value="ridicata">Ridicată</option>
+              <option value="scazuta">Scăzută</option>
+            </select>
+          </div>
+          <div>
+            <label for="date">Data (opțional)</label>
+            <input id="date" type="date">
+          </div>
+          <div>
+            <label for="time">Ora (opțional)</label>
+            <input id="time" type="time" disabled title="Alege mai întâi o dată">
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn btn-primary" type="submit">+ Adaugă activitatea</button>
+          <button class="btn" type="button" id="demo">Încarcă un exemplu</button>
+        </div>
+      </form>
+      <p class="info">📅 Pentru o activitate cu dată, apasă <strong>„În Google Calendar”</strong>. Se va deschide un eveniment cu titlul și termenul completate. <strong>Verifică notificarea și apasă „Salvează” în Google Calendar</strong> ca să primești mementoul. Taskora nu trimite singură notificări.</p>
+      <p id="message" role="status" aria-live="polite"></p>
+    </section>
+
+    <section class="card" aria-labelledby="list-title">
+      <div class="section-top">
+        <h2 id="list-title">Activitățile mele</h2>
+        <div class="filter-group" aria-label="Filtrează activitățile">
+          <button class="filter" data-filter="toate" aria-pressed="true" type="button">Toate</button>
+          <button class="filter" data-filter="active" aria-pressed="false" type="button">De făcut</button>
+          <button class="filter" data-filter="done" aria-pressed="false" type="button">Finalizate</button>
+        </div>
+      </div>
+      <div class="progress-wrap" aria-label="Progresul activităților"><div id="progress"></div></div>
+      <ul class="task-list" id="task-list"></ul>
+      <div id="empty" class="empty">
+        <strong>Lista este goală</strong>
+        Adaugă prima activitate sau încearcă un exemplu.
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    Proiect demonstrativ HTML + CSS + JavaScript • Datele sunt păstrate doar în acest browser, pe acest dispozitiv.
+    <br>Pentru Calendar, evenimentul este creat numai după ce confirmi salvarea în contul tău Google.
+  </footer>
+
+  <script>
+    const STORAGE_KEY = 'taskora_activitati_v1';
+    const list = document.getElementById('task-list');
+    const empty = document.getElementById('empty');
+    const message = document.getElementById('message');
+    let tasks = [];
+    let filter = 'toate';
+
+    // Citește activitățile salvate anterior în browser.
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      if (Array.isArray(saved)) tasks = saved.filter(t => t && typeof t.name === 'string');
+    } catch (error) {
+      message.textContent = 'Salvarea locală nu este disponibilă în acest browser.';
+    }
+
+    function save() {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks)); }
+      catch (error) { message.textContent = 'Modificările nu au putut fi salvate în browser.'; }
+    }
+
+    function addTask(name, priority, date, time = '') {
+      const id = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()) + String(Math.random());
+      tasks.unshift({ id, name, priority, date, time: date ? time : '', done: false });
+      save();
+      render();
+    }
+
+    function formatDate(dateString) {
+      if (!dateString) return 'Fără termen';
+      const date = new Date(dateString + 'T12:00:00');
+      if (isNaN(date.getTime())) return 'Termen nespecificat';
+      return new Intl.DateTimeFormat('ro-RO', { day: '2-digit', month: 'short', year: 'numeric' }).format(date);
+    }
+
+    function calendarDate(date) {
+      return date.replaceAll('-', '');
+    }
+
+    function buildCalendarUrl(task) {
+      if (!task.date || !/^\d{4}-\d{2}-\d{2}$/.test(task.date)) return '';
+      const url = new URL('https://calendar.google.com/calendar/render');
+      url.searchParams.set('action', 'TEMPLATE');
+      url.searchParams.set('text', task.name);
+      const priorities = { ridicata: 'ridicată', medie: 'medie', scazuta: 'scăzută' };
+      url.searchParams.set('details', 'Activitate din Taskora. Prioritate: ' + (priorities[task.priority] || 'medie') + '.\nVerifică notificările evenimentului în Google Calendar înainte de salvare.');
+      if (task.time && /^([01]\d|2[0-3]):[0-5]\d$/.test(task.time)) {
+        // Ora introdusă este interpretată în fusul orar al dispozitivului.
+        const start = new Date(task.date + 'T' + task.time + ':00');
+        if (isNaN(start.getTime())) return '';
+        const end = new Date(start.getTime() + 30 * 60 * 1000);
+        const stamp = date => date.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+        url.searchParams.set('dates', stamp(start) + '/' + stamp(end));
+      } else {
+        // Eveniment de o zi întreagă: data de final este exclusivă.
+        const tomorrow = new Date(task.date + 'T12:00:00');
+        if (isNaN(tomorrow.getTime())) return '';
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const endDate = [tomorrow.getFullYear(), String(tomorrow.getMonth() + 1).padStart(2, '0'), String(tomorrow.getDate()).padStart(2, '0')].join('');
+        url.searchParams.set('dates', calendarDate(task.date) + '/' + endDate);
+      }
+      return url.toString();
+    }
+
+    function render() {
+      const finished = tasks.filter(task => task.done).length;
+      document.getElementById('total').textContent = tasks.length;
+      document.getElementById('pending').textContent = tasks.length - finished;
+      document.getElementById('completed').textContent = finished;
+      document.getElementById('progress').style.width = (tasks.length ? finished / tasks.length * 100 : 0) + '%';
+
+      const visible = tasks.filter(t => filter === 'toate' || (filter === 'done' ? t.done : !t.done));
+      list.replaceChildren();
+      empty.hidden = visible.length > 0;
+      if (!visible.length) {
+        empty.querySelector('strong').textContent = tasks.length ? 'Nicio activitate în această categorie' : 'Lista este goală';
+        return;
+      }
+
+      for (const task of visible) {
+        const item = document.createElement('li');
+        item.className = 'task' + (task.done ? ' done' : '');
+        const check = document.createElement('input');
+        check.type = 'checkbox';
+        check.checked = Boolean(task.done);
+        check.setAttribute('aria-label', 'Marchează ca finalizată: ' + task.name);
+        check.addEventListener('change', () => {
+          task.done = check.checked;
+          save();
+          render();
+        });
+
+        const details = document.createElement('div');
+        details.className = 'task-details';
+        const name = document.createElement('div');
+        name.className = 'task-name';
+        name.textContent = task.name;
+        const meta = document.createElement('div');
+        meta.className = 'task-meta';
+        const priority = document.createElement('span');
+        const priorityNames = { ridicata: 'Ridicată', medie: 'Medie', scazuta: 'Scăzută' };
+        priority.className = 'tag ' + ({ ridicata: 'high', medie: 'medium', scazuta: 'low' }[task.priority] || 'medium');
+        priority.textContent = 'Prioritate: ' + (priorityNames[task.priority] || 'Medie');
+        const due = document.createElement('span');
+        const today = new Date();
+        const localToday = [today.getFullYear(), String(today.getMonth() + 1).padStart(2, '0'), String(today.getDate()).padStart(2, '0')].join('-');
+        const overdue = task.date && task.date < localToday && !task.done;
+        due.className = 'tag' + (overdue ? ' late' : '');
+        due.textContent = (overdue ? 'Întârziată: ' : 'Termen: ') + formatDate(task.date) + (task.time ? ', ' + task.time : '');
+        meta.append(priority, due);
+        details.append(name, meta);
+
+        const del = document.createElement('button');
+        del.type = 'button';
+        del.className = 'delete';
+        del.textContent = 'Șterge';
+        del.setAttribute('aria-label', 'Șterge activitatea: ' + task.name);
+        del.addEventListener('click', () => {
+          tasks = tasks.filter(t => t.id !== task.id);
+          save();
+          render();
+          message.textContent = 'Activitatea a fost ștearsă.';
+        });
+        const taskActions = document.createElement('div');
+        taskActions.className = 'task-actions';
+        if (task.date) {
+          const calendarUrl = buildCalendarUrl(task);
+          if (calendarUrl) {
+            const calendar = document.createElement('a');
+            calendar.className = 'calendar-link';
+            calendar.href = calendarUrl;
+            calendar.target = '_blank';
+            calendar.rel = 'noopener noreferrer';
+            calendar.textContent = '📅 În Google Calendar';
+            calendar.setAttribute('aria-label', 'Pregătește eveniment în Google Calendar pentru ' + task.name);
+            taskActions.appendChild(calendar);
+          }
+        }
+        taskActions.appendChild(del);
+        item.append(check, details, taskActions);
+        list.appendChild(item);
+      }
+    }
+
+    document.getElementById('task-form').addEventListener('submit', (event) => {
+      event.preventDefault();
+      const name = document.getElementById('task-name').value.trim();
+      if (!name) return;
+      addTask(name, document.getElementById('priority').value, document.getElementById('date').value, document.getElementById('time').value);
+      document.getElementById('task-form').reset();
+      document.getElementById('time').disabled = true;
+      document.getElementById('task-name').focus();
+      message.textContent = 'Activitatea a fost adăugată.';
+    });
+
+    document.getElementById('date').addEventListener('change', (event) => {
+      const timeInput = document.getElementById('time');
+      timeInput.disabled = !event.target.value;
+      if (!event.target.value) timeInput.value = '';
+    });
+
+    document.querySelectorAll('.filter').forEach(button => {
+      button.addEventListener('click', () => {
+        filter = button.dataset.filter;
+        document.querySelectorAll('.filter').forEach(b => b.setAttribute('aria-pressed', String(b === button)));
+        render();
+      });
+    });
+
+    document.getElementById('demo').addEventListener('click', () => {
+      const today = new Date();
+      const future = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 3);
+      const date = [future.getFullYear(), String(future.getMonth() + 1).padStart(2, '0'), String(future.getDate()).padStart(2, '0')].join('-');
+      addTask('Pregătește prezentarea pentru curs', 'ridicata', date, '10:00');
+      addTask('Trimite un e-mail important', 'medie', '');
+      addTask('Revizuiește lista de activități', 'scazuta', '');
+      message.textContent = 'Am adăugat trei activități demonstrative.';
+    });
+
+    render();
+  </script>
+</body>
+</html>
